@@ -1,8 +1,5 @@
 # Code Composer Studio
-.launches
-.launches/
-.settings
-.settings/
+Debug/*
 
 # Prerequisites
 *.d
@@ -56,3 +53,4 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/Debug/
