@@ -1,3 +1,9 @@
+# Code Composer Studio
+.launches
+.launches/
+.settings
+.settings/
+
 # Prerequisites
 *.d
 
