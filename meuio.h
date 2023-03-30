@@ -85,6 +85,7 @@ void Software_Trim()
     CSCTL1 = csCtl1Copy;                       // Reload locked DCOFTRIM
     while(CSCTL7 & (FLLUNLOCK0 | FLLUNLOCK1)); // Poll until FLL is locked
 }
+
 char myGetChar (int canal){
     char dado;
     if(canal==0){
@@ -104,6 +105,8 @@ char myGetChar (int canal){
         return(dado);
     }
 }
+
+
 
 
 
@@ -144,6 +147,52 @@ void myPutch(char dado, int canal){
 void print(char * linha, int canal){
     while (*linha)
         myPutch(*linha++, canal);
+}
+
+void init_UART(){
+    PM5CTL0 &= ~LOCKLPM5;                    // Disable the GPIO power-on default high-impedance mode
+                                                   // to activate 1previously configured port settings
+
+        __bis_SR_register(SCG0);                 // disable FLL
+        CSCTL3 |= SELREF__REFOCLK;               // Set REFO as FLL reference source
+        CSCTL1 = DCOFTRIMEN_1 | DCOFTRIM0 | DCOFTRIM1 | DCORSEL_3;// DCOFTRIM=3, DCO Range = 8MHz
+        CSCTL2 = FLLD_0 + 243;                  // DCODIV = 8MHz
+        __delay_cycles(3);
+        __bic_SR_register(SCG0);                // enable FLL
+        Software_Trim();                        // Software Trim to get the best DCOFTRIM value
+
+        CSCTL4 = SELMS__DCOCLKDIV | SELA__REFOCLK; // set default REFO(~32768Hz) as ACLK source, ACLK = 32768Hz
+                                                 // default DCODIV as MCLK and SMCLK source
+
+        // Configure UART pins
+        P1SEL0 |= BIT6 | BIT7;                    // set 2-UART pin as second function
+        P4SEL0 |= BIT2 | BIT3;                    // set 2-UART pin as second function
+         // Configure UART
+        UCA0CTLW0 |= UCSWRST;
+        UCA1CTLW0 |= UCSWRST;
+        UCA0CTLW0 |= UCSSEL__SMCLK;
+        UCA1CTLW0 |= UCSSEL__SMCLK;
+
+        // Baud Rate calculation
+        // 8.000.000/(16*9600) = 52.083
+        // Fractional portion = 0.083
+        // User's Guide Table 17-4: UCBRSx = 0x49
+        // UCBRFx = int ( (52.083-52)*16) = 1
+        UCA0BR0 = 52;                             // 8000000/16/9600
+        UCA1BR0 = 52;                             // 8000000/16/9600
+        UCA0BR1 = 0x00;
+        UCA1BR1 = 0x00;
+        UCA0MCTLW = 0x4900 | UCOS16 | UCBRF_1;
+        UCA1MCTLW = 0x4900 | UCOS16 | UCBRF_1;
+        UCA0CTLW0 &= ~UCSWRST;                    // Initialize eUSCI
+        UCA1CTLW0 &= ~UCSWRST;                    // Initialize eUSCI
+        UCA0IE |= UCRXIE | UCTXIE;                         // Enable USCI_A0 RX interrupt
+        UCA1IE |= UCRXIE | UCTXIE;                         // Enable USCI_A0 RX interrupt
+        TXBufferEmpty0 = TRUE;
+        TXBufferEmpty1 = TRUE;
+
+
+         __bis_SR_register(GIE);         // Enter LPM3, interrupts enabled //LPM3_bits|
 }
 
 
