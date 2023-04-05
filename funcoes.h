@@ -13,9 +13,17 @@
 #include <stdlib.h>
 #include "meuio.h"
 
+//Exemplo de função
 void led(char* t){
+//    estração das variaveis
     int led, ligado;
+
+//    O sscanf é praticamente como um printf invertido, ao inves de
+//    passar os valores depois da string, passamos os endereços onde
+//    serão salvos. e como ele só vai passar os valores de %d, podemos
+//    escrever o nome da função e ele vai ignorar
     sscanf(t,"led%d%d",&led, &ligado);
+
     switch(led){
         case 1:
             if(ligado ==1)
@@ -35,13 +43,26 @@ void led(char* t){
                 break;
     }
 }
+
+
+//Função simples de eco, repete o texto que foi mandado
 void eco(char* t){
-    char arg[64];
-    strcpy(arg,t+4);
     print("I.A. responde : \"", 1);
-    print(arg, 1);
+    print(t+4, 1);
     print("\"\n\r", 1);
 }
+
+
+//TODO fazer comando de desenhar função quadrada
+
+
+//TODO fazer comando de desenhar função triangular
+
+
+//TODO fazer comando de desenhar função senoide
+
+//TODO fazer comando de leitura dos pinos
+
 
 
 

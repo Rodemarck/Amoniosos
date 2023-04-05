@@ -13,70 +13,87 @@
 #include "meuio.h"
 
 #define TAMANHO_COMANDO 16
-#define SEED    0x12345678
-#define SEED_OP 0x5bd1e995
 
-// algotimo MurmurOAAT -> https://stackoverflow.com/questions/7666509/hash-function-for-string
-unsigned long hash_string(char *ptr){
-    unsigned long hash = SEED;
-    while(*ptr){
-        hash ^= *ptr++;
-        hash *= SEED_OP;
-        hash ^= hash >> 15;
-    }
-    return hash;
-
-}
-
+//Criando o tipo Funcao, uma função que recebe uma string e não retorna nada.
 typedef void (*Funcao)(char*);
+
+//Estrutura para armazenar comandos como uma lista(Sim não existe listas em C...)
 struct pos_comandos{
-    struct pos_comandos * prox;
-    char *comando;
-    unsigned long hash;
-    Funcao f;
+    struct pos_comandos * prox; //Ponteiro para o próximo
+    char *comando; //Texto que representa o comando
+    Funcao f; //Função a ser executada pelo comando
 };
 
+//Dando o apelido para ponteiro para a estrutura acima.
 typedef struct pos_comandos* Posicao;
 
-void procura_comando(Posicao cabeca, char *texto){
+
+//Função que recebe uma lista de comandos e um texto e apartir do texto
+//procura o comando na lista de comandos, considerando a primeira palavra
+void procura_comando(Posicao lista, char *texto){
+//    criando string para salvar o texto do comando
     char comando[TAMANHO_COMANDO];
+
+//    scanf de string, pegar a primeira palavra do texto e salvar na string
+//    comando.
     sscanf(texto,"%s",comando);
-    unsigned long hash = hash_string(comando);
+
+//    interar toda a lista procurando o comando e quando acha o executa
     Posicao p;
-    for(p = cabeca; p->prox != NULL; p = p->prox){
-        if(p->prox->hash == hash){
-            if(0 == strcmp(comando,p->prox->comando)){
-                p->prox->f(texto);
-                return;
-            }
+    for(p = lista; p->prox != NULL; p = p->prox){
+//        comparando o os comandos
+        if(0 == strcmp(comando,p->prox->comando)){
+//            executando a função do comando
+            p->prox->f(texto);
+            return;
         }
     }
+
+//    mini tratamento de erro
     print("Comando não encontrado [", 1);
     print(comando, 1);
     print("]\n\r", 1);
 }
 
+
+//Cria uma lista vazia
 Posicao inicia_lista_comandos(){
+    //equivalente a um new
     Posicao p = (Posicao) malloc(sizeof(struct pos_comandos));
     p->prox = NULL;
     return p;
 }
+
+//função que adiciona um novo comando a lista de comandos
 void adiciona_comando(Posicao cabeca, char * comando, Funcao f){
+
+//    pegnado o menor tamanho para criar a string, o tamanho do
+//    comando, ou a constante TAMANHO_COMANDO
     int t = strlen(comando);
     t = t < TAMANHO_COMANDO ? t : TAMANHO_COMANDO;
 
+//    new
     Posicao p = (Posicao) malloc(sizeof(struct pos_comandos));
-    p->comando = (char*) malloc(t * (sizeof(char)) );
+
+//    new na string
+    p->comando = (char*) malloc(t * (sizeof(char)));
+
+//    Não podemos passar a string atravez de =, temos que copiar
     strcpy(p->comando,comando);
-    p->hash = hash_string(comando);
+
+    //set
     p->f = f;
     p->prox = NULL;
+
+//    interando lista até o final dela
     Posicao aux = cabeca;
     while(aux->prox != NULL)
         aux = aux->prox;
     aux->prox = p;
 }
 
+
+//Função para transformar int em string, ignore e use sprintf, printf em string.
 void int_to_str(int n, char* ptr){
     int aux,i = 0,valor = n >0 ? n: (-1 * n);
     char temp;
