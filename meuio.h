@@ -8,14 +8,17 @@
 #ifndef MEUIO_H_
 #define MEUIO_H_
 
+#define COMMBUFFERLENGH 64
+
+
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 #define TRUE 1
 #define FALSE 0
 #define COMMBUFFERLENGH 128
 
-
 volatile int  TXBufferEmpty0, TXBufferEmpty1, ptrWrCH0, ptrWrCH1, ptrRdCH0, ptrRdCH1 ;
 char bufferRxCH0[COMMBUFFERLENGH], bufferRxCH1[COMMBUFFERLENGH];
+
 char linha[COMMBUFFERLENGH];
 
 
@@ -222,5 +225,75 @@ void init_UART(){
          __bis_SR_register(GIE);         // Enter LPM3, interrupts enabled //LPM3_bits|
 }
 
+
+//interrup��es de IO
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=USCI_A0_VECTOR
+__interrupt void USCI_A0_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  switch(__even_in_range(UCA0IV,USCI_UART_UCTXCPTIFG))
+  {
+    case USCI_NONE: break;
+    case USCI_UART_UCRXIFG:
+        bufferRxCH0[ptrWrCH0] = UCA0RXBUF;
+        ptrWrCH0++;
+        ptrWrCH0 &=COMMBUFFERLENGH-1;
+        if (ptrWrCH0==ptrRdCH0){
+            ptrRdCH0++;
+            ptrRdCH0 &=COMMBUFFERLENGH-1;
+        }
+//      while(!(UCA0IFG&UCTXIFG));
+//      UCA0TXBUF = UCA0RXBUF;
+      __no_operation();
+      break;
+    case USCI_UART_UCTXIFG:
+        TXBufferEmpty0 = TRUE;
+        break;
+    case USCI_UART_UCSTTIFG: break;
+    case USCI_UART_UCTXCPTIFG: break;
+    default: break;
+  }
+}
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=USCI_A1_VECTOR
+__interrupt void USCI_A1_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(USCI_A1_VECTOR))) USCI_A_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  switch(__even_in_range(UCA1IV,USCI_UART_UCTXCPTIFG))
+  {
+    case USCI_NONE: break;
+    case USCI_UART_UCRXIFG:
+                __no_operation();
+                bufferRxCH1[ptrWrCH1] = UCA1RXBUF;
+                __no_operation();
+                ptrWrCH1++;
+                ptrWrCH1 &=COMMBUFFERLENGH-1;
+                if (ptrWrCH1==ptrRdCH1){
+                    ptrRdCH1++;
+                    ptrRdCH1 &=COMMBUFFERLENGH-1;
+                }
+        //      while(!(UCA0IFG&UCTXIFG));
+        //      UCA0TXBUF = UCA0RXBUF;
+      __no_operation();
+      break;
+    case USCI_UART_UCTXIFG:
+        TXBufferEmpty1 = TRUE;
+        break;
+    case USCI_UART_UCSTTIFG: break;
+    case USCI_UART_UCTXCPTIFG: break;
+    default: break;
+  }
+}
 
 #endif /* MEUIO_H_ */
