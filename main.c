@@ -3,6 +3,7 @@
 #include "mapeamento.h"
 #include "funcoes.h"
 #include "meuio.h"
+#include "meutimer.h"
 
 void Init_GPIO();
 void init_timers();
@@ -23,7 +24,7 @@ int main(void){
     Init_GPIO();
     Init_timer();
     init_UART();
-    init_timers();
+    Init_timer();
 
     while (1){
         print("\n\rHello Word 1\n\r", 1);
@@ -36,40 +37,3 @@ int main(void){
         print("\n\rBye.....\n\r", 1);
     }
 }
-
-
-
-
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=USCI_A0_VECTOR
-__interrupt void USCI_A0_ISR(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
-#else
-#error Compiler not supported!
-#endif
-{
-  switch(__even_in_range(UCA0IV,USCI_UART_UCTXCPTIFG))
-  {
-    case USCI_NONE: break;
-    case USCI_UART_UCRXIFG:
-        bufferRxCH0[ptrWrCH0] = UCA0RXBUF;
-        ptrWrCH0++;
-        ptrWrCH0 &=COMMBUFFERLENGH-1;
-        if (ptrWrCH0==ptrRdCH0){
-            ptrRdCH0++;
-            ptrRdCH0 &=COMMBUFFERLENGH-1;
-        }
-//      while(!(UCA0IFG&UCTXIFG));
-//      UCA0TXBUF = UCA0RXBUF;
-      __no_operation();
-      break;
-    case USCI_UART_UCTXIFG:
-        TXBufferEmpty0 = TRUE;
-        break;
-    case USCI_UART_UCSTTIFG: break;
-    case USCI_UART_UCTXCPTIFG: break;
-    default: break;
-  }
-}
-

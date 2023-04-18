@@ -14,7 +14,6 @@
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 #define TRUE 1
 #define FALSE 0
-#define COMMBUFFERLENGH 128
 
 volatile int  TXBufferEmpty0, TXBufferEmpty1, ptrWrCH0, ptrWrCH1, ptrRdCH0, ptrRdCH1 ;
 char bufferRxCH0[COMMBUFFERLENGH], bufferRxCH1[COMMBUFFERLENGH];
@@ -25,11 +24,12 @@ char linha[COMMBUFFERLENGH];
 void Init_GPIO(){
     PM5CTL0 &= ~LOCKLPM5;
 
-    P1DIR |= BIT0 | BIT2 | BIT3;
+    P1DIR |= BIT0 | BIT2 | BIT3| BIT5;
     P2DIR &= ~BIT3;
     P4DIR &= ~BIT1;
     P6DIR |= BIT6;
 
+    P1REN |= BIT5;
     P2REN |= BIT3;
     P4REN |= BIT1;
 

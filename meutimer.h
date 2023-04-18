@@ -102,15 +102,24 @@ void Init_timer(){
                  COV_0 // No capture overflow occurred
                  COV_1 // Capture overflow occurred
       */
-    //timer 0 function
-    TB0CCTL0 |= CM_0 | CCIE_1;
-    TB0CCTL1 |= CM_0 | CAP_0 ;
-    TB0CCR0 = 65000;
 
+    //não estamos utilizando essas funções do timer
+    //timer 0 function
+    // TB0CCTL0 |= CM_0 | CCIE_1;
+    // TB0CCTL1 |= CM_0 | CAP_0 ;
 
     //timer 1 function
-    TB1CCTL0 |= CM_0 | CCIE_1;
-    TB1CCTL1 |= CM_0 | CAP_0 ;
+    // TB1CCTL0 |= CM_0 | CCIE_1;
+    // TB1CCTL1 |= CM_0 | CAP_0 ;
+
+
+
+    //registrador de limite, o timer vai contar até o registrador 0
+    //e ai vai chamar a interrupção e voltar a contar do 0
+
+    //registrador 0 do timer b0
+    TB0CCR0 = 65000;
+    //registrador 0 do timer b1
     TB1CCR0 = 520;
 
         //52  = 10k
@@ -124,29 +133,7 @@ void configura_timer_gerador(int freq){
 
 
 
-
-
-
-
-
-
-
-// Timer B0 interrupt service routine
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector = TIMER0_B0_VECTOR
-__interrupt void Timer_B (void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(TIMER0_B0_VECTOR))) Timer_B (void)
-#else
-#error Compiler not supported!
-#endif
-{
-    //P1OUT ^= BIT2;
-    //P1OUT ^= BIT0;
-
-}
-
-// Timer B1 interrupt service routine
+// interrupção do timer 0
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER0_B1_VECTOR
 __interrupt void Timer_B1 (void)
@@ -156,35 +143,14 @@ void __attribute__ ((interrupt(TIMER0_B1_VECTOR))) Timer_B1 (void)
 #error Compiler not supported!
 #endif
 {
-    lixo = TB0IV;
-    P1OUT ^= BIT3;
-    P1OUT ^=BIT0;
+    lixo = TB0IV;//limpa interrupção do timer 0
+    P1OUT ^= BIT3;//alternar o pino P1.3 ()
+    P1OUT ^=BIT0;//alterna o pino P1.0 (led)
 
 }
 
 
-
-
-
-
-
-
-// Timer B0 interrupt service routine
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector = TIMER1_B0_VECTOR
-__interrupt void Timer1_B (void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(TIMER1_B0_VECTOR))) Timer1_B (void)
-#else
-#error Compiler not supported!
-#endif
-{
-
-    //P1OUT ^= BIT0;
-
-}
-
-// Timer B1 interrupt service routine
+// interrupção do timer 1
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER1_B1_VECTOR
 __interrupt void Timer1_B1 (void)
@@ -194,11 +160,8 @@ void __attribute__ ((interrupt(TIMER1_B1_VECTOR))) Timer1_B1 (void)
 #error Compiler not supported!
 #endif
 {
-    //lixo = TB0IV;
-    lixo = TB1IV;
-    P1OUT ^= BIT2;
-    //P1OUT ^= BIT3;
-    //P1OUT ^=BIT0;
+    lixo = TB1IV; //limpa interrupção do timer 1
+    P1OUT ^= BIT5;//alterna o pino P1.5 (função quadrada)
 
 }
 
