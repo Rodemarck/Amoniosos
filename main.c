@@ -9,14 +9,17 @@ long long i;
 
 
 int main(void){
-    WDTCTL = WDTPW | WDTHOLD; // Stop watchdog timer
+    WDTCTL = WDTPW | WDTHOLD; //led 14 20
+
     Posicao comandos = inicia_lista_comandos();
-    adiciona_comando(comandos, "led", &led);
+    //adiciona_comando(comandos, "led", &led);
     adiciona_comando(comandos, "eco", &eco);
+    adiciona_comando(comandos, "quad", &quad);
 
 
     // Configure GPIO
     Init_GPIO();
+    Init_timer();
     init_UART();
 
 
@@ -32,26 +35,7 @@ int main(void){
 }
 
 
-void Init_GPIO(){
-    P1DIR = 0xFF;
-    P2DIR = 0xFF;
-    P1REN = 0xFF;
-    P2REN = 0xFF;
-    P1OUT = 0x00;
-    P2OUT = 0x00;
-    P1DIR |= BIT0;
-    P6DIR |= BIT6;
-    P2DIR &= ~BIT3;
-    P2REN |= BIT3;
-    P2OUT |= BIT3;
-    P4DIR &= ~BIT1;
-    P4REN |= BIT1;
-    P4OUT |= BIT1;
 
-
-    P1OUT &= ~BIT0;
-    P6OUT &= ~BIT6;
-}
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=USCI_A0_VECTOR

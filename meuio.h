@@ -12,9 +12,36 @@
 #define TRUE 1
 #define FALSE 0
 #define COMMBUFFERLENGH 128
+
+
 volatile int  TXBufferEmpty0, TXBufferEmpty1, ptrWrCH0, ptrWrCH1, ptrRdCH0, ptrRdCH1 ;
 char bufferRxCH0[COMMBUFFERLENGH], bufferRxCH1[COMMBUFFERLENGH];
 char linha[COMMBUFFERLENGH];
+
+
+void Init_GPIO(){
+    PM5CTL0 &= ~LOCKLPM5;
+
+    P1DIR |= BIT0 | BIT2 | BIT3;
+    P2DIR &= ~BIT3;
+    P4DIR &= ~BIT1;
+    P6DIR |= BIT6;
+
+    P2REN |= BIT3;
+    P4REN |= BIT1;
+
+    P1SEL0 &=~BIT6;
+    P1SEL1 |=BIT6;
+    P1REN |= BIT6;
+
+    P2OUT |= BIT3;
+    P4OUT |= BIT1;
+
+
+
+    //P1OUT &= ~BIT0;
+    //P6OUT &= ~BIT6;
+}
 
 // Software Trim to get the best DCOFTRIM value
 void Software_Trim()

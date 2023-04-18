@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "meuio.h"
+#include "tipos.h"
 
 #define TAMANHO_COMANDO 16
 #define SEED    0x12345678
@@ -28,7 +29,7 @@ unsigned long hash_string(char *ptr){
 
 }
 
-typedef void (*Funcao)(char*);
+
 struct pos_comandos{
     struct pos_comandos * prox;
     char *comando;

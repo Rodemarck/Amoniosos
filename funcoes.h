@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "meuio.h"
+#include "meutimer.h"
+
+#define FREQ_MIN 520
+#define FREQ_MAX 52
 
 void led(char* t){
     int led, ligado;
@@ -41,6 +45,20 @@ void eco(char* t){
     print("I.A. responde : \"", 1);
     print(arg, 1);
     print("\"\n\r", 1);
+}
+
+int map_freq(int freq){
+    if(freq <1)
+        return FREQ_MIN;
+    if(freq > 10)
+        return FREQ_MAX;
+    return (int)((float)FREQ_MIN / freq);
+}
+
+void quad(char *t){
+    int freq, amp;
+    sscanf(t,"quad%d%d", &freq, &amp);
+    configura_timer_gerador(map_freq(freq));
 }
 
 
