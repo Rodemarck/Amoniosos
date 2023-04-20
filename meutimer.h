@@ -3,127 +3,115 @@
  *
  *  Created on: 4 de abr de 2023
  *      Author: Rodemarck
+ *
+ *  Está muito acoplado eu sei e um dia melhora.
+ *  Este arquivo está responsável pela configuração
+ *  dos timers e utilizando suas interupções para
+ *  fazer o gerador de função.
+ *
+ *  Notem que Existe um jeito melhor para fazer tudo isso
+ *  que é por tudo como função de timer, o led piscando como
+ *  PWM, e utilziar combo de maneira decente (dá para colocar
+ *  interrupção do DAC como uma função do timer) mas primeiro
+ *  se faz o caminho feliz.
+ *
+ *  As configurações do DAC estão no arquivo meuio, na função
+ *  Init_GPIO.
+ *
+ *  A função Init_timer configura os timers que estamos utilizando
+ *  e como não estamos utilizando funções de timer, apenas suas
+ *  interrupções da maneira mais porca, porém fácil, possivel, só
+ *  precisamos "definir o tempo a ser temporizado".
+ *
+ *  O led piscando a 1 hz está atrelada ao timer b0 e eu defini
+ *  o led 1 para o gerador e o led 2 para o buffer. Como a freq
+ *  e tudo mais é o mesmo então  vamos emular uma maquina de
+ *  estados na interupção do timer com um switch. Ou seja, se
+ *  estiver no estado X vai fazer x, se eu mudar o estado para
+ *  Y vai fazer y. Vide a interupção B1 do timer B0 (penultimo trecho
+ *  de código do arquivo e eu sei que o nome é uma bosta, mas fazer o q?).
+ *
+ *  Deve haver 3 tipos de funções e elas tem que operar no mesmo
+ *  pino, e para isso tbm fiz uma emualação cagada de uma maquina
+ *  de estados que está na interrupção B1 do timer B1. Eu decidi
+ *  que cada função vai ter 20 valores(fonte: vozes da minha cabeça)
+ *  e ai eu só preciso pegar a freq e multiplicar por 20(já que são
+ *  20 passos por função), ou seja dimunir o registrador de controle
+ *  do contador do timer B1,(Deveria ser o TB1CL0, mas TB1CCR0 é um
+ *  registrador que transfere o valor para TB1CL0 com algum tipo de
+ *  tratamento baseado no clock escolhido e suas divisões, segundo o
+ *  datasheet, não vejo a necessidade mas se existe tem motivo)
+ *
+ *
  */
 
 #ifndef MEUTIMER_H_
 #define MEUTIMER_H_
 
+#define MODO_GERA 0
+#define MODO_BUFF 1
+#define TIPO_QUAD 0
+#define TIPO_TRIA 1
+#define TIPO_SENO 2
+
 int lixo;
-int tipo;
+int tipo = TIPO_QUAD;
+int modo = MODO_GERA;
+int val;
+int index = 0;
 
-void Init_timer(){
-    /*
-       *   bits configuration for TB0CCTLn register
-       *
-                CM_0 // No capture
-                CM_1 // Capture on rising edge
-                CM_2 // Capture on falling edge
-                CM_3 // Capture on both rising and falling edges
-                 |  // Capture/compare input select.
-                CCIS_0 // CCIxA
-                CCIS_1 // CCIxB
-                CCIS_2 // GND
-                CCIS_3 // VCC
-                 | // Synchronize capture source
-                 SCS_0 //  Asynchronous capture
-                 SCS_1 //  Synchronous capture
-                 | //Compare latch load.
-                 CLLD_0 // TBxCLn loads on write to TBxCCRn
-                 CLLD_1 // TBxCLn loads when TBxR counts to 0
-                 CLLD_2 // TBxCLn loads when TBxR counts to 0 (up or continuous mode). TBxCLn loads when TBxR counts to TBxCL0 or to 0 (up/down mode).
-                 CLLD_3 // TBxCLn loads when TBxR counts to TBxCL
-                 | // Capture mode
-                 CAP_0 // Compare mode
-                 CAP_1 // Capture mode
-                 | // Output mode
-                 OUTMOD_0 //  OUT bit value
-                 OUTMOD_1 //  Set
-                 OUTMOD_2 //  Toggle/reset
-                 OUTMOD_3 //  Set/reset
-                 OUTMOD_4 //  Toggle
-                 OUTMOD_5 //  Reset
-                 OUTMOD_6 //  Toggle/set
-                 OUTMOD_7 //  Reset/set
-                 | // Capture/compare interrupt enable.
-                 CCIE_0 // Interrupt disabled
-                 CCIE_1 //  Interrupt enabled
-                 | // Output. For output mode 0, this bit directly controls the state of the outpu
-                 OUT_0 // Output low
-                 OUT_1 // Output high
-                 | // Capture overflow. This bit indicates a capture overflow occurred. COV must be reset with software
-                 COV_0 // No capture overflow occurred
-                 COV_1 // Capture overflow occurred
-      */
-
-    //timer 0 config
-    TB0CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_3 | MC_1 | TBIE_1;
-    //timer 1 config
-    TB1CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_0 | MC_1 | TBIE_1;
-
-    /*
-       *   bits configuration for TB0CCTLn register
-       *
-                CM_0 // No capture
-                CM_1 // Capture on rising edge
-                CM_2 // Capture on falling edge
-                CM_3 // Capture on both rising and falling edges
-                 |  // Capture/compare input select.
-                CCIS_0 // CCIxA
-                CCIS_1 // CCIxB
-                CCIS_2 // GND
-                CCIS_3 // VCC
-                 | // Synchronize capture source
-                 SCS_0 //  Asynchronous capture
-                 SCS_1 //  Synchronous capture
-                 | //Compare latch load.
-                 CLLD_0 // TBxCLn loads on write to TBxCCRn
-                 CLLD_1 // TBxCLn loads when TBxR counts to 0
-                 CLLD_2 // TBxCLn loads when TBxR counts to 0 (up or continuous mode). TBxCLn loads when TBxR counts to TBxCL0 or to 0 (up/down mode).
-                 CLLD_3 // TBxCLn loads when TBxR counts to TBxCL
-                 | // Capture mode
-                 CAP_0 // Compare mode
-                 CAP_1 // Capture mode
-                 | // Output mode
-                 OUTMOD_0 //  OUT bit value
-                 OUTMOD_1 //  Set
-                 OUTMOD_2 //  Toggle/reset
-                 OUTMOD_3 //  Set/reset
-                 OUTMOD_4 //  Toggle
-                 OUTMOD_5 //  Reset
-                 OUTMOD_6 //  Toggle/set
-                 OUTMOD_7 //  Reset/set
-                 | // Capture/compare interrupt enable.
-                 CCIE_0 // Interrupt disabled
-                 CCIE_1 //  Interrupt enabled
-                 | // Output. For output mode 0, this bit directly controls the state of the outpu
-                 OUT_0 // Output low
-                 OUT_1 // Output high
-                 | // Capture overflow. This bit indicates a capture overflow occurred. COV must be reset with software
-                 COV_0 // No capture overflow occurred
-                 COV_1 // Capture overflow occurred
-      */
-
-    //não estamos utilizando essas funções do timer
-    //timer 0 function
-    // TB0CCTL0 |= CM_0 | CCIE_1;
-    // TB0CCTL1 |= CM_0 | CAP_0 ;
-
-    //timer 1 function
-    // TB1CCTL0 |= CM_0 | CCIE_1;
-    // TB1CCTL1 |= CM_0 | CAP_0 ;
+//valores de senos com 20 passos (a cada 18°)
+//e serão multiplicados a tensão maxima para
+//fazer a tensão pico a pico variar
+float sen_ref[] = {
+                   0.5,
+                   0.6545084971874737,
+                   0.7938926261462366,
+                   0.9045084971874737,
+                   0.9755282581475768,
+                   1,
+                   0.9755282581475768,
+                   0.9045084971874737,
+                   0.7938926261462367,
+                   0.6545084971874737,
+                   0.5,
+                   0.3454915028125264,
+                   0.2061073738537635,
+                   0.09549150281252633,
+                   0.024471741852423234,
+                   0,
+                   0.02447174185242318,
+                   0.09549150281252622,
+                   0.20610737385376332,
+                   0.34549150281252616,
+                   0.5
+};
 
 
 
-    //registrador de limite, o timer vai contar até o registrador 0
-    //e ai vai chamar a interrupção e voltar a contar do 0
+//valores inteiros de referencia serem colocados
+int sen_value[20] = {0};
+int tri_value[20] = {0};
+int qua_value[20] = {0};
 
-    //registrador 0 do timer b0
-    TB0CCR0 = 65000;
-    //registrador 0 do timer b1
-    TB1CCR0 = 520;
 
-        //52  = 10k
-        //520 = 1k
+void set_tipo(int t,int count, int max_v){
+    TB1CCR0 = count;
+    tipo = t;
+    int x;
+    switch(t){
+    case TIPO_SENO:
+        for(x=0; x < 20 ; x--){
+            sen_value[x] = (int) (sen_ref[x] * max_v);
+        }
+        break;
+    case TIPO_QUAD:
+        //TODO
+        break;
+    case TIPO_TRIA:
+        //TODO
+        break;
+    }
 
 }
 
@@ -132,20 +120,87 @@ void configura_timer_gerador(int freq){
 }
 
 
+void Init_timer(){
+    /*
+         *    bits configuration for TB0CTL register
+         *
+                TBCLGRP_0 //Each TBxCLn latch loads independently
+                TBCLGRP_1
+                TBCLGRP_2
+                TBCLGRP_3
+                | // Counter length
+                CNTL_0 // 16-bit, TBxR(max) = 0FFFFh
+                CNTL_1 //12-bit, TBxR(max) = 0FFFh
+                CNTL_2 //10-bit, TBxR(max) = 03FFh
+                CNTL_3 // 8-bit, TBxR(max) = 0FFh
+                | // Timer_B clock source select
+                TBSSEL_0 //TBxCLK
+                TBSSEL_1 //ACLK
+                TBSSEL_2 //SMCLK
+                TBSSEL_3 //INCLK
+                | // input divider. These bits, along with the TBIDEX bits, select the divider for the input clock
+                ID_0 // Div 1
+                ID_1 // Div 2
+                ID_2 // Div 4
+                ID_3 // Div 8
+                | // Mode control. Set MC = 00h when Timer_B is not in use to conserve power.
+                MC_0 // Stop mode: Timer is halted
+                MC_1 // Up mode: Timer counts up to TBxCL0
+                MC_2 // Continuous mode: Timer counts up to the value set by CNTL
+                MC_3 // Up/down mode: Timer counts up to TBxCL0 and down to 0000h
+                | TBCLR // Timer_B clear. Setting this bit clears TBxR, the clock divider logic (the divider setting remains unchanged), and the count direction
+                | // Timer_B interrupt enable.
+                TBIE_0 // interrupt disable.
+                TBIE_1 // interrupt enable.
+        */
 
-// interrupção do timer 0
+    //timer 0 config
+    TB0CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_1 | ID_3 | MC_1 | TBIE_1;
+    //timer 1 config
+    TB1CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_0 | MC_1 | TBIE_1;
+
+    //CONTADOR PRO LED 1
+    TB0CCR0 = 19500;
+
+    set_tipo(TIPO_SENO,2020,1800);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Rotina de interrupção do timer 0
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER0_B1_VECTOR
-__interrupt void Timer_B1 (void)
+__interrupt void interrupcao_B1_timer_b0 (void)
 #elif defined(__GNUC__)
 void __attribute__ ((interrupt(TIMER0_B1_VECTOR))) Timer_B1 (void)
 #else
 #error Compiler not supported!
 #endif
 {
-    lixo = TB0IV;//limpa interrupção do timer 0
-    P1OUT ^= BIT3;//alternar o pino P1.3 ()
-    P1OUT ^=BIT0;//alterna o pino P1.0 (led)
+
+    lixo = TB0IV;
+    switch(modo){
+    case MODO_GERA:
+        P1OUT ^=BIT0;
+        P6OUT &= ~BIT6;
+        break;
+    case MODO_BUFF:
+        P1OUT &=~BIT0;
+        P6OUT ^= BIT6;
+    }
+    P1OUT ^= BIT3;
+
+
 
 }
 
@@ -153,16 +208,27 @@ void __attribute__ ((interrupt(TIMER0_B1_VECTOR))) Timer_B1 (void)
 // interrupção do timer 1
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER1_B1_VECTOR
-__interrupt void Timer1_B1 (void)
+__interrupt void interrupcao_B1_timer_b1 (void)
 #elif defined(__GNUC__)
 void __attribute__ ((interrupt(TIMER1_B1_VECTOR))) Timer1_B1 (void)
 #else
 #error Compiler not supported!
 #endif
 {
-    lixo = TB1IV; //limpa interrupção do timer 1
-    P1OUT ^= BIT5;//alterna o pino P1.5 (função quadrada)
-
+    lixo = TB1IV;
+    ++index;
+    if(index > 1)
+        index = 0;
+    switch(tipo){
+        case TIPO_QUAD:
+            SAC0DAT = qua_value[index];
+            break;
+        case TIPO_SENO:
+            SAC0DAT = sen_value[index];
+            break;
+        case TIPO_TRIA:
+            SAC0DAT = tri_value[index];
+    }
 }
 
 

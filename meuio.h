@@ -3,6 +3,8 @@
  *
  *  Created on: 11 de mar de 2023
  *      Author: rodem
+ *
+ *  PORRA NEM PERDE TEMPO LENDO ISSO, A NÃO SER O
  */
 
 #ifndef MEUIO_H_
@@ -21,30 +23,6 @@ char bufferRxCH0[COMMBUFFERLENGH], bufferRxCH1[COMMBUFFERLENGH];
 char linha[COMMBUFFERLENGH];
 
 
-void Init_GPIO(){
-    PM5CTL0 &= ~LOCKLPM5;
-
-    P1DIR |= BIT0 | BIT2 | BIT3| BIT5;
-    P2DIR &= ~BIT3;
-    P4DIR &= ~BIT1;
-    P6DIR |= BIT6;
-
-    P1REN |= BIT5;
-    P2REN |= BIT3;
-    P4REN |= BIT1;
-
-    P1SEL0 &=~BIT6;
-    P1SEL1 |=BIT6;
-    P1REN |= BIT6;
-
-    P2OUT |= BIT3;
-    P4OUT |= BIT1;
-
-
-
-    //P1OUT &= ~BIT0;
-    //P6OUT &= ~BIT6;
-}
 
 // Software Trim to get the best DCOFTRIM value
 void Software_Trim()
@@ -179,7 +157,7 @@ void print(char * linha, int canal){
         myPutch(*linha++, canal);
 }
 
-void init_UART(){
+void Init_UART(){
     PM5CTL0 &= ~LOCKLPM5;                    // Disable the GPIO power-on default high-impedance mode
                                                    // to activate 1previously configured port settings
 
