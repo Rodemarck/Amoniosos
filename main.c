@@ -3,32 +3,64 @@
 #include "funcoes.h"
 #include "meuio.h"
 #include "meutimer.h"
+#include "so.h"
 
-long long i;
 
 void Init_GPIO();
+
 
 
 //Main
 int main(void){
     WDTCTL = WDTPW | WDTHOLD;
-
     // Configure GPIO
     Init_GPIO();
     Init_UART();
     Init_timer();
-    //print("\n\rOlá caro usuario", 1);
+    print("olá parceiro\n\r",1);
     while (1){
-        __no_operation();                         // For debugger
-        //print("\n\rSó que não...", 1);
-        do {
+        switch(++maquina_estado_L1){
+        case ESTADO_UART:
+            switch(++maquina_estado_L2){ 
+            case UART_WR_CH0:
+                _escreve_canal_0();
+                break;
+            case UART_RD_CH0:
+                _ler_canal_0();
+                break;
+            case UART_EX_CH0:
+                _interpreta_canal_0();
+                break;
+            case UART_WR_CH1:
+                _escreve_canal_1();
+                break;
+            case UART_RD_CH1:
+                _ler_canal_1();
+                break;
+            case UART_EX_CH1:
+                __no_operation();
+                _interpreta_canal_1();
+                maquina_estado_L2 = 0;
+                break;
+            }
+            break;
+        case ESTADO_GERA:
+            __no_operation();
+            _desenha();
+            break;
+        case ESTADO_BUFF:
+            switch(maquina_estado_L2){
 
-            __no_operation();                         // For debugger
-            myGetLine (linha, 1);
-
-            procura_comando(linha);
-        } while(strcmp(linha,"sair"));
-        //print("\n\rVou deixar você em paz...\n\r", 1);
+            }
+            break;
+        case ESTADO_LED1:
+            maquina_estado_L1 = -1;
+            if(timer_led_tick){
+                P1OUT ^= BIT0;
+                timer_led_tick = 0;
+            }
+            break;
+        }
     }
 }
 
@@ -37,7 +69,7 @@ int main(void){
 void Init_GPIO(){
 
 
-    //DIREÇÃO DOS PINOS
+    //DIREï¿½ï¿½O DOS PINOS
     P1DIR       |= BIT0 | BIT1 | BIT2 | BIT3 |BIT5;
     P2DIR       &= ~BIT3;
     P4DIR       &= ~BIT1;
@@ -47,8 +79,8 @@ void Init_GPIO(){
     P2REN       |= BIT3;
     P4REN       |= BIT1;
 
-    //FUNÇÕES ESPECIAIS DOS PINOS
-    /** P1.1 como saída do amplificador operacional 0*/
+    //FUNï¿½ï¿½ES ESPECIAIS DOS PINOS
+    /** P1.1 como saï¿½da do amplificador operacional 0*/
     P1SEL0      |= BIT1;
     P1SEL1      |= BIT1;
 
@@ -60,34 +92,34 @@ void Init_GPIO(){
 
 
 
-    //CONFIGURAÇÃO DA PORRA DO SAC DAC
+    //CONFIGURAï¿½ï¿½O DA PORRA DO SAC DAC
     /**
      * Configurando o amplificador operacional, operational amplifier (OA)...
      * Usem a imagem que mandei no discord [https://cdn.discordapp.com/attachments/1072655359199682594/1098480422859583588/image.png]
 
        Registrador SACxOA (Smart Analog Combo x Operational Amplifier)
 
-       Seleção da entrada positiva do OA (Positive SELect)
-           PSEL_0 -> Entrada externa positiva (pino com a função OAx+)
+       Seleï¿½ï¿½o da entrada positiva do OA (Positive SELect)
+           PSEL_0 -> Entrada externa positiva (pino com a funï¿½ï¿½o OAx+)
            PSEL_1 -> DAC (Conversor de digital para analogico)
            PSEL_2 -> Entrada emparelhada (Verificar datasheet)
-           PSEL_3 -> Reservado (não faaz nada)
+           PSEL_3 -> Reservado (nï¿½o faaz nada)
 
-       Ativação da entrada positiva do OA (Positive MUX ENable)
+       Ativaï¿½ï¿½o da entrada positiva do OA (Positive MUX ENable)
            PMUXEN_0 -> desativar entrada positiva
            PMUXEN_1 -> ativar entrada positiva
 
-       Seleção da entrada negativa do OA (Negative SELect)
-           NSEL_0 -> Entrada externa negativa (pino com a função OAx-)
+       Seleï¿½ï¿½o da entrada negativa do OA (Negative SELect)
+           NSEL_0 -> Entrada externa negativa (pino com a funï¿½ï¿½o OAx-)
            NSEL_1 -> Fonte do amplificador Operacional
            NSEL_2 -> Entrada emparelhada (Verificar datasheet)
-           NSEL_3 -> Reservado (não faaz nada)
+           NSEL_3 -> Reservado (nï¿½o faaz nada)
 
-       Ativação da entrada negativa do OA (Negative MUX ENable)
+       Ativaï¿½ï¿½o da entrada negativa do OA (Negative MUX ENable)
            NMUXEN_0 -> Desativar entrada negativa
            NMUXEN_1 -> Ativar entrada negativa
 
-       Ativação do OA
+       Ativaï¿½ï¿½o do OA
            OAEN_0   -> Desativar OA
            OAEN_1   -> Ativar OA
 
@@ -95,7 +127,7 @@ void Init_GPIO(){
            OAPM_0   -> Alta velocidade, com alto consumo
            OAPM_1   -> Baixa velocidade, com baixo consumo
 
-       Ativação do SAC(SAC Enable)
+       Ativaï¿½ï¿½o do SAC(SAC Enable)
            SACEN_0  -> Ativar Sac
            SACEN_1  -> Desativar Sac
      */

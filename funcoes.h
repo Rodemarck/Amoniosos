@@ -47,7 +47,7 @@
 #define FREQ_FUNC FREQ_BASE/10
 
 //Fator de multiplicação de tensão
-#define FATOR_TENSAO 1.24f
+#define FATOR_TENSAO 330000
 
 //tamanho máximo dos comandos, pq sim!
 #define TAMANHO_COMANDO 16
@@ -101,7 +101,7 @@ int map_freq(int freq){
 
 //Mesma coisa do map_freq, só que para a tensão
 int map_amp(int amp){
-    return (int) (amp * FATOR_TENSAO);
+    return (int) (FATOR_TENSAO/amp);
 }
 
 //Função que muda a função gerada para onda quadrada
@@ -114,8 +114,10 @@ void quad(char *t){
 //Mesma coisa só que para onda senoidal
 void sen(char *t){
     int freq, amp;
-    sscanf(t,"sen%d%d", &freq, &amp);
-    set_tipo(TIPO_SENO, map_freq(freq), map_amp(amp));
+    sscanf(t,"sin%d%d", &freq, &amp);
+    freq = map_freq(freq);
+    amp = map_amp(amp);
+    set_tipo(TIPO_SENO, freq, amp);
 }
 
 //Idem, para triangular
@@ -134,7 +136,7 @@ void procura_comando(char *texto){
     sscanf(texto,"%s",comando);
 
 
-    if(0 == strcmp(comando,"sen"))
+    if(0 == strcmp(comando,"sin"))
         sen(texto);
     else if(0 == strcmp(comando,"quad"))
         quad(texto);
