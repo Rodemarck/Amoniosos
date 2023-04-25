@@ -4,43 +4,43 @@
  *  Created on: 4 de abr de 2023
  *      Author: Rodemarck
  *
- *  Está muito acoplado eu sei e um dia melhora.
- *  Este arquivo está responsável pela configuração
- *  dos timers e utilizando suas interupções para
- *  fazer o gerador de função.
+ *  Estï¿½ muito acoplado eu sei e um dia melhora.
+ *  Este arquivo estï¿½ responsï¿½vel pela configuraï¿½ï¿½o
+ *  dos timers e utilizando suas interupï¿½ï¿½es para
+ *  fazer o gerador de funï¿½ï¿½o.
  *
  *  Notem que Existe um jeito melhor para fazer tudo isso
- *  que é por tudo como função de timer, o led piscando como
- *  PWM, e utilziar combo de maneira decente (dá para colocar
- *  interrupção do DAC como uma função do timer) mas primeiro
+ *  que ï¿½ por tudo como funï¿½ï¿½o de timer, o led piscando como
+ *  PWM, e utilziar combo de maneira decente (dï¿½ para colocar
+ *  interrupï¿½ï¿½o do DAC como uma funï¿½ï¿½o do timer) mas primeiro
  *  se faz o caminho feliz.
  *
- *  As configurações do DAC estão no arquivo meuio, na função
+ *  As configuraï¿½ï¿½es do DAC estï¿½o no arquivo meuio, na funï¿½ï¿½o
  *  Init_GPIO.
  *
- *  A função Init_timer configura os timers que estamos utilizando
- *  e como não estamos utilizando funções de timer, apenas suas
- *  interrupções da maneira mais porca, porém fácil, possivel, só
+ *  A funï¿½ï¿½o Init_timer configura os timers que estamos utilizando
+ *  e como nï¿½o estamos utilizando funï¿½ï¿½es de timer, apenas suas
+ *  interrupï¿½ï¿½es da maneira mais porca, porï¿½m fï¿½cil, possivel, sï¿½
  *  precisamos "definir o tempo a ser temporizado".
  *
- *  O led piscando a 1 hz está atrelada ao timer b0 e eu defini
+ *  O led piscando a 1 hz estï¿½ atrelada ao timer b0 e eu defini
  *  o led 1 para o gerador e o led 2 para o buffer. Como a freq
- *  e tudo mais é o mesmo então  vamos emular uma maquina de
- *  estados na interupção do timer com um switch. Ou seja, se
+ *  e tudo mais ï¿½ o mesmo entï¿½o  vamos emular uma maquina de
+ *  estados na interupï¿½ï¿½o do timer com um switch. Ou seja, se
  *  estiver no estado X vai fazer x, se eu mudar o estado para
- *  Y vai fazer y. Vide a interupção B1 do timer B0 (penultimo trecho
- *  de código do arquivo e eu sei que o nome é uma bosta, mas fazer o q?).
+ *  Y vai fazer y. Vide a interupï¿½ï¿½o B1 do timer B0 (penultimo trecho
+ *  de cï¿½digo do arquivo e eu sei que o nome ï¿½ uma bosta, mas fazer o q?).
  *
- *  Deve haver 3 tipos de funções e elas tem que operar no mesmo
- *  pino, e para isso tbm fiz uma emualação cagada de uma maquina
- *  de estados que está na interrupção B1 do timer B1. Eu decidi
- *  que cada função vai ter 20 valores(fonte: vozes da minha cabeça)
- *  e ai eu só preciso pegar a freq e multiplicar por 20(já que são
- *  20 passos por função), ou seja dimunir o registrador de controle
- *  do contador do timer B1,(Deveria ser o TB1CL0, mas TB1CCR0 é um
+ *  Deve haver 3 tipos de funï¿½ï¿½es e elas tem que operar no mesmo
+ *  pino, e para isso tbm fiz uma emualaï¿½ï¿½o cagada de uma maquina
+ *  de estados que estï¿½ na interrupï¿½ï¿½o B1 do timer B1. Eu decidi
+ *  que cada funï¿½ï¿½o vai ter 20 valores(fonte: vozes da minha cabeï¿½a)
+ *  e ai eu sï¿½ preciso pegar a freq e multiplicar por 20(jï¿½ que sï¿½o
+ *  20 passos por funï¿½ï¿½o), ou seja dimunir o registrador de controle
+ *  do contador do timer B1,(Deveria ser o TB1CL0, mas TB1CCR0 ï¿½ um
  *  registrador que transfere o valor para TB1CL0 com algum tipo de
- *  tratamento baseado no clock escolhido e suas divisões, segundo o
- *  datasheet, não vejo a necessidade mas se existe tem motivo)
+ *  tratamento baseado no clock escolhido e suas divisï¿½es, segundo o
+ *  datasheet, nï¿½o vejo a necessidade mas se existe tem motivo)
  *
  *
  */
@@ -65,9 +65,9 @@ char timer_led_tick = 0;
 char timer_buff_tick = 0;
 int index = 0;
 
-//valores de senos com 20 passos (a cada 18°)
-//e serão multiplicados a tensão maxima para
-//fazer a tensão pico a pico variar
+//valores de senos com 20 passos (a cada 18ï¿½)
+//e serï¿½o multiplicados a tensï¿½o maxima para
+//fazer a tensï¿½o pico a pico variar
 const long sen_ref[] = {
                        204800,
                        268000,
@@ -92,7 +92,13 @@ const long sen_ref[] = {
                        204800
 };
 
+const int qua_ref[] = {
+    0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1
+};
 
+const float tri_ref[] = {
+    0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1
+};
 
 //valores inteiros de referencia serem colocados
 int sen_value[20] = {0};
@@ -111,10 +117,14 @@ void set_tipo(int t,int count, int divisor_tensao){
         }
         break;
     case TIPO_QUAD:
-        //TODO
+        for(x = 0 ; x < 20; x++) {
+            qua_value[x] = (qua_ref[x] / divisor_tensao);
+        }
         break;
     case TIPO_TRIA:
-        //TODO
+        for(x = 0 ; x < 20; x++) {
+            tri_value[x] = (int) (tri_ref[x] / divisor_tensao);
+        }
         break;
     }
 
@@ -208,7 +218,7 @@ void Init_timer(){
 
 
 
-// interrupção do timer 0
+// interrupï¿½ï¿½o do timer 0
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER0_B1_VECTOR
 __interrupt void interrupcao_B1_timer_b0 (void)
@@ -223,7 +233,7 @@ void __attribute__ ((interrupt(TIMER0_B1_VECTOR))) Timer_B1 (void)
 }
 
 
-// interrupção do timer 1
+// interrupï¿½ï¿½o do timer 1
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER1_B1_VECTOR
 __interrupt void interrupcao_B1_timer_b1 (void)
