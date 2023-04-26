@@ -92,12 +92,32 @@ const long sen_ref[] = {
                        204800
 };
 
-const int qua_ref[] = {
-    0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0
+const long qua_ref[] = {
+    0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0
 };
 
-const float tri_ref[] = {
-    0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0
+const long tri_ref[] = {
+    0,
+    41000,
+    81900,
+    122900,
+    163800,
+    204800,
+    245700,
+    286700,
+    327600,
+    368600,
+    409500,
+    368600,
+    327600,
+    286700,
+    245700,
+    204800,
+    163800,
+    122900,
+    81900,
+    41000,
+    0
 };
 
 //valores inteiros de referencia serem colocados
@@ -118,7 +138,7 @@ void set_tipo(int t,int count, int divisor_tensao){
         break;
     case TIPO_QUAD:
         for(x = 0 ; x < 20; x++) {
-            qua_value[x] = (qua_ref[x] / divisor_tensao);
+            qua_value[x] = (int) (qua_ref[x] / divisor_tensao);
         }
         break;
     case TIPO_TRIA:
