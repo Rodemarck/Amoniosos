@@ -31,17 +31,17 @@ void Init_ADC(){
     // avaliar portas
     ADCMCTL0 |= ADCINCH_3;          // ADC input Channel  Port 1.3
     //  ADCMCTL0 |= ADCINCH_6;          // ADC input Channel  Port 1.6
-    
+
     ADCIE |= ADCIE0;                // Enable the Interrupt request for a completed ADC_B conversion
     ADCCTL0 |= ADCENC;              // Enable conversions
     ADCCTL0 |= ADCSC;               // Start conversion
     ADCCTL0 |= ADCMSC;
 
-    __bis_SR_register(LPM0_bits | GIE);                
+    __bis_SR_register(LPM0_bits | GIE);
     __no_operation();
 
-    PMMCTL0_H = PMMPW_H;                                        
-    PMMCTL2 |= INTREFEN;  
+    PMMCTL0_H = PMMPW_H;
+    PMMCTL2 |= INTREFEN;
     ADCENC = 1
 }
 
