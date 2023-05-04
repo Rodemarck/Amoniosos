@@ -17,11 +17,11 @@ int main(void){
     Init_GPIO();
     Init_UART();
     Init_timer();
-    print("ol· parceiro\n\r",1);
+    print("ol√° parceiro\n\r",1);
     while (1){
         switch(++maquina_estado_L1){
         case ESTADO_UART:
-            switch(++maquina_estado_L2){ 
+            switch(++maquina_estado_L2){
             case UART_WR_CH0:
                 _escreve_canal_0();
                 break;

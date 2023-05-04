@@ -19,8 +19,8 @@
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 
 
-volatile int    TXBufferEmpty0, TXBufferEmpty1, ptrWrCH0, ptrWrCH1, 
-                ptrRdCH0, ptrRdCH1, RdFinishCH0, RdFinishCH1, kk  ;
+volatile int    TXBufferEmpty0, TXBufferEmpty1, ptrWrCH0, ptrWrCH1,
+                ptrRdCH0, ptrRdCH1, RdFinishCH0, RdFinishCH1;
 int iRdCH0, iRdCH1, iWrCH0, iWrCH1;
 char bufferRxCH0[COMMBUFFERLENGH+1], bufferRxCH1[COMMBUFFERLENGH+1],
     strRdCH0[MAXSTRINGLENGTH],strRdCH1[MAXSTRINGLENGTH],
@@ -30,16 +30,16 @@ char bufferRxCH0[COMMBUFFERLENGH+1], bufferRxCH1[COMMBUFFERLENGH+1],
 void print(char * linha, int canal){
     if(canal == 0){
         int posix = iWrCH0;
-        while(strWrCH0[posix] != '\0') 
+        while(strWrCH0[posix] != '\0')
             ++posix;
-        
+
         while (*linha){
             strWrCH0[posix++] = *linha++;
             posix &= COMMBUFFERLENGH-1;
         }
     }else{
         int posix = iWrCH1;
-        while(strWrCH1[posix] != '\0') 
+        while(strWrCH1[posix] != '\0')
             ++posix;
         while (*linha){
             strWrCH1[posix++] = *linha++;

@@ -49,6 +49,7 @@
 #define MEUTIMER_H_
 #include "time.h"
 
+#include "funcoes.h"
 #define MODO_GERA 0
 #define MODO_BUFF 1
 #define TIPO_QUAD 0
@@ -217,13 +218,13 @@ void Init_timer(){
     //timer 0 config
     TB0CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_1 | ID_3 | MC_1 | TBIE_1;
     //timer 1 config
-    TB1CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_0 | MC_2 | TBIE_1;
+    TB1CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_0 | MC_1 | TBIE_1;
 
     //CONTADOR PRO LED 1
-    TB0CCR0 = 65535;
+    TB0CCR0 = 1500;
 
-
-    set_tipo(TIPO_SENO,600,100);
+    TB1CCR0 = 1500;
+    set_tipo(TIPO_SENO,map_freq(1),100);
 }
 
 

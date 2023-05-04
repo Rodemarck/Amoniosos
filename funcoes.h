@@ -4,16 +4,16 @@
  *  Created on: 11 de mar de 2023
  *      Author: rodem
  *
- *  Está muito acoplado eu sei e um dia melhora.
- *  Este arquivo está responsável pelo controle do projeto.
- *  Ou seja aqui está o tratamento de comandos e tudo mais.
+ *  Estï¿½ muito acoplado eu sei e um dia melhora.
+ *  Este arquivo estï¿½ responsï¿½vel pelo controle do projeto.
+ *  Ou seja aqui estï¿½ o tratamento de comandos e tudo mais.
  *
  *  O contador para a frequencia de 1KHz foi achada no chute
- *  e regra de 3 depois que achamos algo útil.
+ *  e regra de 3 depois que achamos algo ï¿½til.
  *
- *  O fator de tensão deveria encontrado uma regra de 3 que faz
- *  sim sentido. Como o nosso SACDAC possui precisãod e 12 bits
- *  então pode representar valores de 0 a 4095 e sendo a
+ *  O fator de tensï¿½o deveria encontrado uma regra de 3 que faz
+ *  sim sentido. Como o nosso SACDAC possui precisï¿½od e 12 bits
+ *  entï¿½o pode representar valores de 0 a 4095 e sendo a
  *  voltagem maxima 3.3v, ou seja 3330mV
  *
  *  4095 - 3300
@@ -23,8 +23,8 @@
  *   x = 4095/3300
  *   x = 1,24
  *
- *   Eu tentei fazer um sistema de funções com hash e tudo mais
- *   mas era inútil, melhor encadear a porcaria de uma estrutura
+ *   Eu tentei fazer um sistema de funï¿½ï¿½es com hash e tudo mais
+ *   mas era inï¿½til, melhor encadear a porcaria de uma estrutura
  *   de if-else utilizando strcmp.
  *
  */
@@ -39,28 +39,28 @@
 #include "meutimer.h"
 
 //frequencia base 1KHz (encontrada por multiplas tentativas e erros
-//além de uma regra de 3 torta)
+//alï¿½m de uma regra de 3 torta)
 #define FREQ_BASE 4004
 
-//frequencia base para as funções, deveria ser 20, mas devido a problemas
-//de atenção cheguei a /10 que bateu
+//frequencia base para as funï¿½ï¿½es, deveria ser 20, mas devido a problemas
+//de atenï¿½ï¿½o cheguei a /10 que bateu
 #define FREQ_FUNC FREQ_BASE/10
 
-//Fator de multiplicação de tensão
+//Fator de multiplicaï¿½ï¿½o de tensï¿½o
 #define FATOR_TENSAO 330000
 
-//tamanho máximo dos comandos, pq sim!
+//tamanho mï¿½ximo dos comandos, pq sim!
 #define TAMANHO_COMANDO 16
 
-//Exemplo de função
+//Exemplo de funï¿½ï¿½o
 void led(char* t){
-//    estração das variaveis
+//    estraï¿½ï¿½o das variaveis
     int led, ligado;
 
-//    O sscanf é praticamente como um printf invertido, ao inves de
-//    passar os valores depois da string, passamos os endereços onde
-//    serão salvos. e como ele só vai passar os valores de %d, podemos
-//    escrever o nome da função e ele vai ignorar
+//    O sscanf ï¿½ praticamente como um printf invertido, ao inves de
+//    passar os valores depois da string, passamos os endereï¿½os onde
+//    serï¿½o salvos. e como ele sï¿½ vai passar os valores de %d, podemos
+//    escrever o nome da funï¿½ï¿½o e ele vai ignorar
     sscanf(t,"led%d%d",&led, &ligado);
 
     switch(led){
@@ -84,34 +84,36 @@ void led(char* t){
 }
 
 
-//Função simples de eco, repete o texto que foi mandado
-//Totalmente inútil, mas exemplo é exemplo.
+//Funï¿½ï¿½o simples de eco, repete o texto que foi mandado
+//Totalmente inï¿½til, mas exemplo ï¿½ exemplo.
 void eco(char* t){
     print("I.A. responde : \"", 1);
     print(t+4, 1);
     print("\"\n\r", 1);
 }
 
-//Transforma a fequencia desejada em número para ser
+//Transforma a fequencia desejada em nï¿½mero para ser
 //contado pelo contador do timer de maneira a chegar
 //nesa frequencia
 int map_freq(int freq){
     return (int)((float)FREQ_FUNC / freq);
 }
 
-//Mesma coisa do map_freq, só que para a tensão
+//Mesma coisa do map_freq, sï¿½ que para a tensï¿½o
 int map_amp(int amp){
     return (int) (FATOR_TENSAO/amp);
 }
 
-//Função que muda a função gerada para onda quadrada
+//Funï¿½ï¿½o que muda a funï¿½ï¿½o gerada para onda quadrada
 void quad(char *t){
     int freq, amp;
     sscanf(t,"quad%d%d", &freq, &amp);
+    freq = map_freq(freq);
+    amp = map_amp(amp);
     set_tipo(TIPO_QUAD, map_freq(freq), map_amp(amp));
 }
 
-//Mesma coisa só que para onda senoidal
+//Mesma coisa sï¿½ que para onda senoidal
 void sen(char *t){
     int freq, amp;
     sscanf(t,"sin%d%d", &freq, &amp);
@@ -124,6 +126,8 @@ void sen(char *t){
 void tri(char *t){
     int freq, amp;
     sscanf(t,"tri%d%d", &freq, &amp);
+    freq = map_freq(freq);
+    amp = map_amp(amp);
     set_tipo(TIPO_TRIA, map_freq(freq), map_amp(amp));
 }
 
@@ -147,7 +151,7 @@ void procura_comando(char *texto){
     else if(0 == strcmp(comando,"eco"))
         eco(texto);
     else{//Server para debug
-        print("Comando não encontrado [", 1);
+        print("Comando nï¿½o encontrado [", 1);
         print(comando, 1);
         print("]\n\r", 1);
     }
