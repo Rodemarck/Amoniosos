@@ -182,6 +182,9 @@ void configura_timer_gerador(int freq){
 
 
 void Init_timer(){
+
+    TB1CCTL1 = CCIFG_0 | COV_1 | CCIE_1 | CAP_0 | SCS_1 | CCIS_3 | CM_3;
+    TB1CCTL2 = CCIFG_0 | COV_1 | CCIE_1 | CAP_0 | SCS_1 | CCIS_3 | CM_3;
     /*
          *    bits configuration for TB0CTL register
          *
@@ -222,6 +225,7 @@ void Init_timer(){
 
     //CONTADOR PRO LED 1
     TB0CCR0 = 1500;
+
 
     TB1CCR0 = 1500;
     set_tipo(TIPO_SENO,map_freq(1),100);
@@ -265,23 +269,41 @@ void __attribute__ ((interrupt(TIMER1_B1_VECTOR))) Timer1_B1 (void)
 #endif
 {
     lixo = TB1IV;
-    timer_func_tick = 1;
-    /*switch(__even_in_range(TB1IV,TB1IV_TBIFG)){
-    case TB1IV_NONE:
+    //timer_func_tick = 1;
+    switch(__even_in_range(TB1IV,1000)){
+    case 0:
         break;
-    case TB1IV_TB1CCR1:
+    case 2:
         __no_operation();
         timer_func_tick = 1;
         break;
-    case TB1IV_TB1CCR2:
+    case 4:
         __no_operation();
         timer_func_tick = 1;
         break;
-    case TB1IV_TBIFG:
+    case 6:
         __no_operation();
         timer_func_tick = 1;
         break;
-    }*/
+    case 8:
+        __no_operation();
+        timer_func_tick = 1;
+        break;
+    case 10:
+        __no_operation();
+        timer_func_tick = 1;
+        break;
+
+
+    case 12:
+            __no_operation();
+            timer_func_tick = 1;
+            break;
+    case 14:
+            __no_operation();
+            timer_func_tick = 1;
+            break;
+    }
 }
 
 

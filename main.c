@@ -133,7 +133,11 @@ void Init_GPIO(){
      */
     SAC0OA = PSEL_1 | PMUXEN_1 | NSEL_1 | NMUXEN_1 | OAEN_1 | OAPM_0 | SACEN_1;
 
+    /**
+     * Configuração da entrada do PGA
+     *
 
+     */
     SAC0PGA |= MSEL1;
     SAC0DAC |= DACEN_1 | DACIE_0| DACDMAE_0 | DACLSEL_0| DACSREF_0;
 }
