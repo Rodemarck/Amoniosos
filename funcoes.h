@@ -38,13 +38,12 @@
 #include "meuio.h"
 #include "meutimer.h"
 
-//frequencia base 1KHz (encontrada por multiplas tentativas e erros
+//frequencia base 1Hz (encontrada por multiplas tentativas e erros
 //al�m de uma regra de 3 torta)
-#define FREQ_BASE 4004
+#define FREQ_BASE 3120
 
 //frequencia base para as fun��es, deveria ser 20, mas devido a problemas
 //de aten��o cheguei a /10 que bateu
-#define FREQ_FUNC FREQ_BASE/10
 
 //Fator de multiplica��o de tens�o
 #define FATOR_TENSAO 330000
@@ -96,7 +95,7 @@ void eco(char* t){
 //contado pelo contador do timer de maneira a chegar
 //nesa frequencia
 int map_freq(int freq){
-    return (int)((float)FREQ_FUNC / freq);
+    return (int)(FREQ_BASE / freq);
 }
 
 //Mesma coisa do map_freq, s� que para a tens�o
@@ -110,7 +109,7 @@ void quad(char *t){
     sscanf(t,"quad%d%d", &freq, &amp);
     freq = map_freq(freq);
     amp = map_amp(amp);
-    set_tipo(TIPO_QUAD, map_freq(freq), map_amp(amp));
+    set_tipo(TIPO_QUAD, freq, amp);
 }
 
 //Mesma coisa s� que para onda senoidal
@@ -128,12 +127,13 @@ void tri(char *t){
     sscanf(t,"tri%d%d", &freq, &amp);
     freq = map_freq(freq);
     amp = map_amp(amp);
-    set_tipo(TIPO_TRIA, map_freq(freq), map_amp(amp));
+    set_tipo(TIPO_TRIA, freq, amp);
 }
 
 //procura o comando na lista de comandos, considerando a primeira palavra
 void procura_comando(char *texto){
     char comando[TAMANHO_COMANDO];
+    char buff[64];
 
 //    scanf de string, pegar a primeira palavra do texto e salvar na string
 //    comando.
@@ -151,9 +151,9 @@ void procura_comando(char *texto){
     else if(0 == strcmp(comando,"eco"))
         eco(texto);
     else{//Server para debug
-        print("Comando n�o encontrado [", 1);
-        print(comando, 1);
-        print("]\n\r", 1);
+        sprintf(buff,"comando [%s] nao encontrado",comando);
+        print(buff, 1);
+
     }
 }
 

@@ -8,8 +8,8 @@
 
 void Init_GPIO();
 
-
-
+#define LED_STEP 100000
+unsigned long led_timer = LED_STEP;
 //Main
 int main(void){
     WDTCTL = WDTPW | WDTHOLD;
@@ -17,7 +17,9 @@ int main(void){
     Init_GPIO();
     Init_UART();
     Init_timer();
-    print("olá parceiro\n\r",1);
+    print("eu digo 1\n\r",1);
+    print("eu digo 2\n\r",1);
+    print("eu digo \n\r",1);
     while (1){
         switch(++maquina_estado_L1){
         case ESTADO_UART:
@@ -55,9 +57,10 @@ int main(void){
             break;
         case ESTADO_LED1:
             maquina_estado_L1 = -1;
-            if(timer_led_tick){
+            if(current_time > led_timer){
+                led_timer += LED_STEP;
                 P1OUT ^= BIT0;
-                timer_led_tick = 0;
+
             }
             break;
         }
@@ -139,5 +142,5 @@ void Init_GPIO(){
 
      */
     SAC0PGA |= MSEL1;
-    SAC0DAC |= DACEN_1 | DACIE_0| DACDMAE_0 | DACLSEL_0| DACSREF_0;
+    SAC0DAC = DACEN_1 | DACIE_0| DACDMAE_0 | DACLSEL_0| DACSREF_0;
 }

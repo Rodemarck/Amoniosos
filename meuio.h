@@ -37,14 +37,16 @@ void print(char * linha, int canal){
             strWrCH0[posix++] = *linha++;
             posix &= COMMBUFFERLENGH-1;
         }
+        strWrCH0[posix] = '\0';
     }else{
         int posix = iWrCH1;
-        while(strWrCH1[posix] != '\0')
+        while(strWrCH1[posix])
             ++posix;
         while (*linha){
             strWrCH1[posix++] = *linha++;
             posix &= COMMBUFFERLENGH-1;
         }
+        strWrCH1[posix] = '\0';
     }
 }
 
@@ -63,7 +65,7 @@ void _escreve_canal_0(){
     if(TXBufferEmpty0 && strWrCH0[iWrCH0]){
         TXBufferEmpty0 = FALSE;
         UCA0TXBUF = strWrCH0[iWrCH0];
-        if(strWrCH0[iWrCH0] != '\0')
+        if(strWrCH0[iWrCH0] != 0)
             ++iWrCH0;
         iWrCH0 &= MAXSTRINGLENGTH-1;
     }
@@ -80,13 +82,13 @@ void _interpreta_canal_0(){
 
 void _ler_canal_1(){
     __no_operation();
-    if (RdFinishCH1 || iRdCH1 == ptrWrCH1) return;
+    if (RdFinishCH1 || ptrRdCH1 == ptrWrCH1) return;
     strRdCH1[iRdCH1] = bufferRxCH1[ptrRdCH1++];
-    if(strRdCH1[iRdCH1++] == '\r'){
-        strRdCH1[iRdCH1-1] = '\0';
-        iRdCH1 = 0;
+    if(strRdCH1[iRdCH1] == '\r'){
+        strRdCH1[iRdCH1] = 0;
         RdFinishCH1 = TRUE;
-    }
+    }else
+        ++iRdCH1;
     ptrRdCH1 &=COMMBUFFERLENGH-1;
     iRdCH1 &= MAXSTRINGLENGTH-1;
 }
@@ -104,10 +106,9 @@ void _escreve_canal_1(){
 
 void _interpreta_canal_1(){
     if(RdFinishCH1){
-        procura_comando(strRdCH1);
-        strRdCH1[iRdCH1] = 1;
         iRdCH1 = 0;
-        RdFinishCH1 = FALSE;
+        RdFinishCH1 = 0;
+        procura_comando(strRdCH1);
     }
 }
 

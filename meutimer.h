@@ -55,96 +55,51 @@
 #define TIPO_QUAD 0
 #define TIPO_TRIA 1
 #define TIPO_SENO 2
+#define STEP_SIZE 64
+unsigned long current_time = 0;
 
 int lixo;
 int tipo = TIPO_QUAD;
 int modo = MODO_GERA;
 int val;
 
-char timer_func_tick = 0;
-char timer_led_tick = 0;
+unsigned long timer_step = 10;
+unsigned long timer_func = 0;
+
 char timer_buff_tick = 0;
 int index = 0;
 
-//valores de senos com 20 passos (a cada 18�)
+
+//valores de senos com 64 passos (a cada 18�)
 //e ser�o multiplicados a tens�o maxima para
 //fazer a tens�o pico a pico variar
-const long sen_ref[] = {
-                       204800,
-                       268000,
-                       325100,
-                       370400,
-                       399500,
-                       409500,
-                       399500,
-                       370400,
-                       325100,
-                       268000,
-                       204800,
-                       141500,
-                       84400,
-                       39100,
-                       10000,
-                       0,
-                       10000,
-                       39100,
-                       84400,
-                       141500,
-                       204800
-};
-
-const long qua_ref[] = {
-    0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0, 409500, 0
-};
-
-const long tri_ref[] = {
-    0,
-    41000,
-    81900,
-    122900,
-    163800,
-    204800,
-    245700,
-    286700,
-    327600,
-    368600,
-    409500,
-    368600,
-    327600,
-    286700,
-    245700,
-    204800,
-    163800,
-    122900,
-    81900,
-    41000,
-    0
-};
+const long sen_ref [] = {204750,224819,244694,264185,283104,301268,318503,334642,349530,363023,374993,385323,393914,400683,405565,408514,409500,408514,405565,400683,393914,385323,374993,363023,349530,334642,318503,301268,283104,264185,244694,224819,204750,184680,164805,145314,126395,108231,90996,74857,59969,46476,34506,24176,15585,8816,3934,985,0,985,3934,8816,15585,24176,34506,46476,59969,74857,90996,108231,126395,145314,164805,184680};
+const long qua_ref [] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500,409500};
+const long tri_ref [] = {0,12800,25600,38400,51200,64000,76800,89600,102400,115200,128000,140800,153600,166400,179200,192000,204800,217600,230400,243200,256000,268800,281600,294400,307200,320000,332800,345600,358400,371200,384000,396800,409600,396800,384000,371200,358400,345600,332800,320000,307200,294400,281600,268800,256000,243200,230400,217600,204800,192000,179200,166400,153600,140800,128000,115200,102400,89600,76800,64000,51200,38400,25600,12800,0};
 
 //valores inteiros de referencia serem colocados
-int sen_value[20] = {0};
-int tri_value[20] = {0};
-int qua_value[20] = {0};
+int values[STEP_SIZE] = {0};
 
 
 void set_tipo(int t,int count, int divisor_tensao){
-    TB1CCR0 = count;
-    tipo = t;
+
+    timer_step = count;
+    timer_func = current_time + timer_step;
     unsigned int x;
     switch(t){
     case TIPO_SENO:
-        for(x=0; x < 20 ; x++){
-            sen_value[x] = (int) (sen_ref[x] / divisor_tensao);
+        for(x=0; x < STEP_SIZE ; x++){
+            values[x] = (int) (sen_ref[x] / divisor_tensao);
         }
         break;
     case TIPO_QUAD:
-        for(x = 0 ; x < 20; x++) {
-            qua_value[x] = (int) (qua_ref[x] / divisor_tensao);
+        for(x = 0 ; x < STEP_SIZE; x++) {
+            values[x] = (int) (qua_ref[x] / divisor_tensao);
         }
         break;
     case TIPO_TRIA:
-        for(x = 0 ; x < 20; x++) {
-            tri_value[x] = (int) (tri_ref[x] / divisor_tensao);
+        for(x = 0 ; x < STEP_SIZE; x++) {
+            values[x] = (int) (tri_ref[x] / divisor_tensao);
         }
         break;
     }
@@ -154,23 +109,12 @@ void set_tipo(int t,int count, int divisor_tensao){
 }
 
 void _desenha(){
-    if(timer_func_tick){
-        timer_func_tick = 0;
-        ++index;
-        if(index>=20)
-            index = 0;
 
-        switch(tipo){
-        case TIPO_QUAD:
-            SAC0DAT = qua_value[index];
-            break;
-        case TIPO_TRIA:
-            SAC0DAT = tri_value[index];
-            break;
-        case TIPO_SENO:
-            SAC0DAT = sen_value[index];
-            break;
-        }
+    if(current_time > timer_func ){
+        timer_func+= timer_step;
+        ++index;
+        index &= STEP_SIZE-1;
+        SAC0DAT = values[index];
     }
 }
 
@@ -183,8 +127,8 @@ void configura_timer_gerador(int freq){
 
 void Init_timer(){
 
-    TB1CCTL1 = CCIFG_0 | COV_1 | CCIE_1 | CAP_0 | SCS_1 | CCIS_3 | CM_3;
-    TB1CCTL2 = CCIFG_0 | COV_1 | CCIE_1 | CAP_0 | SCS_1 | CCIS_3 | CM_3;
+    //TB1CCTL1 = CCIFG_0 | COV_1 | CCIE_1 | CAP_0 | SCS_1 | CCIS_3 | CM_3;
+    //TB1CCTL2 = CCIFG_0 | COV_1 | CCIE_1 | CAP_0 | SCS_1 | CCIS_3 | CM_3;
     /*
          *    bits configuration for TB0CTL register
          *
@@ -218,17 +162,19 @@ void Init_timer(){
                 TBIE_1 // interrupt enable.
         */
 
-    //timer 0 config
-    TB0CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_1 | ID_3 | MC_1 | TBIE_1;
-    //timer 1 config
-    TB1CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_0 | MC_1 | TBIE_1;
+    //desabilita
+    TB0CTL &= ~ (BITE | BITF);
+
+
+    TB0CTL |= TBCLGRP_0 | CNTL_0 | TBSSEL_2 | ID_0 | MC_1 | TBIE_1;
 
     //CONTADOR PRO LED 1
-    TB0CCR0 = 1500;
+    //4050
+    TB0CCR0 = 40;
 
 
-    TB1CCR0 = 1500;
-    set_tipo(TIPO_SENO,map_freq(1),100);
+    //TB1CCR0 = 1500;
+    set_tipo(TIPO_SENO,map_freq(500),200);
 }
 
 
@@ -254,10 +200,10 @@ void __attribute__ ((interrupt(TIMER0_B1_VECTOR))) Timer_B1 (void)
 #endif
 {
     lixo = TB0IV;
-    timer_led_tick = 1;
+    ++current_time;
 }
 
-
+/*
 // interrup��o do timer 1
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER1_B1_VECTOR
@@ -270,41 +216,11 @@ void __attribute__ ((interrupt(TIMER1_B1_VECTOR))) Timer1_B1 (void)
 {
     lixo = TB1IV;
     //timer_func_tick = 1;
-    switch(__even_in_range(TB1IV,1000)){
-    case 0:
-        break;
-    case 2:
-        __no_operation();
-        timer_func_tick = 1;
-        break;
-    case 4:
-        __no_operation();
-        timer_func_tick = 1;
-        break;
-    case 6:
-        __no_operation();
-        timer_func_tick = 1;
-        break;
-    case 8:
-        __no_operation();
-        timer_func_tick = 1;
-        break;
-    case 10:
-        __no_operation();
-        timer_func_tick = 1;
-        break;
-
-
-    case 12:
-            __no_operation();
-            timer_func_tick = 1;
-            break;
-    case 14:
-            __no_operation();
-            timer_func_tick = 1;
-            break;
-    }
+    timer_func_tick = 0;
+    ++index;
+    index &= STEP_SIZE-1;
+    SAC0DAT = values[index];
 }
 
-
+*/
 #endif /* MEUTIMER_H_ */
